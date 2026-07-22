@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Manual Q&A — คู่มือเครื่องจักร</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --bg:#1b1f22;
+    --panel:#24292c;
+    --panel-raised:#2c3236;
+    --accent-amber:#e8a33d;
+    --accent-cyan:#5fb3b3;
+    --text-primary:#e9e6df;
+    --text-muted:#8a9096;
+    --border:#3a4045;
+    --danger:#c1553d;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text-primary);
+    font-family:'IBM Plex Sans',sans-serif;
+    height:100vh;
+    overflow:hidden;
+  }
+  .app{
+    display:flex;
+    height:100vh;
+  }
+  /* ---- Sidebar ---- */
+  .sidebar{
+    width:300px;
+    min-width:300px;
+    background:var(--panel);
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    padding:20px 16px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:22px;
+  }
+  .brand-dot{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--accent-amber);
+    box-shadow:0 0 8px var(--accent-amber);
+  }
+  .brand-text{
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:0.5px;
+  }
+  .brand-sub{
+    font-size:11px;
+    color:var(--text-muted);
+    font-family:'IBM Plex Mono',monospace;
+    margin-top:2px;
+  }
+  .dropzone{
+    border:1.5px dashed var(--border);
+    border-radius:6px;
+    padding:22px 12px;
+    text-align:center;
+    cursor:pointer;
+    font-size:13px;
+    color:var(--text-muted);
+    transition:border-color .15s, background .15s;
+  }
+  .dropzone:hover, .dropzone.dragover{
+    border-color:var(--accent-cyan);
+    background:rgba(95,179,179,0.06);
+    color:var(--text-primary);
+  }
+  .dropzone svg{display:block;margin:0 auto 8px;opacity:0.6;}
+  input[type=file]{display:none;}
+  .manual-list{
+    margin-top:18px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    overflow-y:auto;
+    flex:1;
+  }
+  .manual-card{
+    background:var(--panel-raised);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:10px 12px;
+    cursor:pointer;
+    position:relative;
+    transition:border-color .15s;
+  }
+  .manual-card.active{
+    border-color:var(--accent-amber);
+  }
+  .manual-card:hover .del-btn{opacity:1;}
+  .manual-name{
+    font-size:13px;
+    font-weight:500;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    padding-right:18px;
+  }
+  .manual-meta{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    color:var(--text-muted);
+    margin-top:4px;
+  }
+  .del-btn{
+    position:absolute;
+    top:8px;right:8px;
+    opacity:0;
+    transition:opacity .15s;
+    background:none;border:none;
+    color:var(--text-muted);
+    cursor:pointer;
+    font-size:14px;
+    line-height:1;
+    padding:2px;
+  }
+  .del-btn:hover{color:var(--danger);}
+  .progress-wrap{
+    margin-top:10px;
+    font-size:11px;
+    color:var(--accent-cyan);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .progress-bar{
+    height:3px;
+    background:var(--border);
+    border-radius:2px;
+    margin-top:4px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--accent-cyan);
+    width:0%;
+    transition:width .2s;
+  }
+  .footnote{
+    font-size:10.5px;
+    color:var(--text-muted);
+    line-height:1.5;
+    padding-top:10px;
+    border-top:1px solid var(--border);
+  }
+
+  /* ---- Main chat ---- */
+  .main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+  }
+  .chat-header{
+    padding:16px 24px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .chat-title{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--text-muted);
+  }
+  .chat-title b{color:var(--text-primary);}
+  .messages{
+    flex:1;
+    overflow-y:auto;
+    padding:24px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  .empty-state{
+    margin:auto;
+    text-align:center;
+    color:var(--text-muted);
+    max-width:360px;
+  }
+  .empty-state svg{opacity:0.4;margin-bottom:14px;}
+  .empty-state h3{
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--text-primary);
+    font-weight:600;
+    font-size:15px;
+    margin:0 0 8px;
+  }
+  .empty-state p{font-size:13px;line-height:1.6;margin:0;}
+
+  .msg{
+    max-width:78%;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .msg.user{align-self:flex-end;align-items:flex-end;}
+  .msg.assistant{align-self:flex-start;align-items:flex-start;}
+  .bubble{
+    padding:11px 15px;
+    border-radius:10px;
+    font-size:14.5px;
+    line-height:1.6;
+    white-space:pre-wrap;
+  }
+  .msg.user .bubble{
+    background:var(--accent-cyan);
+    color:#0f1416;
+    border-bottom-right-radius:2px;
+  }
+  .msg.assistant .bubble{
+    background:var(--panel-raised);
+    border:1px solid var(--border);
+    border-bottom-left-radius:2px;
+  }
+  .msg.assistant .bubble.error{
+    border-color:var(--danger);
+    color:#f0b3a4;
+  }
+
+  /* nameplate citation tag - signature element */
+  .nameplate{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:linear-gradient(180deg,#3a4045,#2c3236);
+    border:1px solid #4a5156;
+    border-radius:3px;
+    padding:4px 9px 4px 7px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.4px;
+    color:var(--accent-amber);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.3);
+    position:relative;
+  }
+  .nameplate::before{
+    content:'';
+    width:4px;height:4px;
+    border-radius:50%;
+    background:#5a6167;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4) inset;
+  }
+  .thinking{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--text-muted);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .dot-flash{
+    width:5px;height:5px;border-radius:50%;
+    background:var(--accent-cyan);
+    animation:flash 1s infinite ease-in-out;
+  }
+  .dot-flash:nth-child(2){animation-delay:.15s;}
+  .dot-flash:nth-child(3){animation-delay:.3s;}
+  @keyframes flash{0%,100%{opacity:.25;}50%{opacity:1;}}
+
+  .input-bar{
+    padding:16px 24px 20px;
+    border-top:1px solid var(--border);
+    display:flex;
+    gap:10px;
+  }
+  .input-bar textarea{
+    flex:1;
+    resize:none;
+    background:var(--panel-raised);
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--text-primary);
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:14px;
+    padding:11px 14px;
+    line-height:1.5;
+    max-height:120px;
+  }
+  .input-bar textarea:focus{
+    outline:none;
+    border-color:var(--accent-cyan);
+  }
+  .send-btn{
+    background:var(--accent-amber);
+    border:none;
+    border-radius:8px;
+    color:#241a05;
+    font-weight:600;
+    padding:0 20px;
+    cursor:pointer;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:14px;
+    transition:filter .15s;
+  }
+  .send-btn:hover{filter:brightness(1.08);}
+  .send-btn:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+  }
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <div>
+        <div class="brand-text">MANUAL Q&A</div>
+        <div class="brand-sub">ผู้ช่วยค้นคู่มือเครื่องจักร</div>
+      </div>
+    </div>
+
+    <div class="dropzone" id="dropzone">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12m0-12l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+      อัปโหลด PDF คู่มือ<br><span style="opacity:.7">คลิกหรือลากไฟล์มาวาง</span>
+    </div>
+    <input type="file" id="fileInput" accept="application/pdf" multiple>
+    <div class="progress-wrap" id="progressWrap" style="display:none;">
+      <span id="progressLabel">กำลังอ่านไฟล์...</span>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <div class="manual-list" id="manualList"></div>
+
+    <div class="footnote">ข้อมูลแต่ละไฟล์จะถูกแตกเป็นชิ้นย่อยและเก็บไว้ในเบราว์เซอร์ ไม่มีการอัปโหลดไฟล์ดิบขึ้นเซิร์ฟเวอร์ภายนอก</div>
+  </div>
+
+  <div class="main">
+    <div class="chat-header">
+      <div class="chat-title">กำลังถาม: <b id="activeManualLabel">— ยังไม่ได้เลือกคู่มือ —</b></div>
+    </div>
+    <div class="messages" id="messages">
+      <div class="empty-state" id="emptyState">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <h3>เริ่มจากอัปโหลดคู่มือ</h3>
+        <p>อัปโหลดไฟล์ PDF คู่มือเครื่องจักรทางซ้าย ระบบจะแตกข้อความและเตรียมพร้อมให้ถามได้ทันที รองรับไฟล์ขนาดใหญ่หลายร้อยหน้า</p>
+      </div>
+    </div>
+    <div class="input-bar">
+      <textarea id="questionInput" rows="1" placeholder="พิมพ์คำถามเกี่ยวกับคู่มือ เช่น ค่า torque ของสกรูยึดมอเตอร์คือเท่าไหร่..." disabled></textarea>
+      <button class="send-btn" id="sendBtn" disabled>ส่ง</button>
+    </div>
+  </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const CHUNK_SIZE = 1400;
+const CHUNK_OVERLAP = 150;
+const TOP_K = 5;
+
+let manuals = {}; // id -> {id, name, pages, chunks:[{page,text}], chatHistory:[]}
+let activeId = null;
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const manualList = document.getElementById('manualList');
+const progressWrap = document.getElementById('progressWrap');
+const progressFill = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+const messagesEl = document.getElementById('messages');
+const emptyState = document.getElementById('emptyState');
+const questionInput = document.getElementById('questionInput');
+const sendBtn = document.getElementById('sendBtn');
+const activeManualLabel = document.getElementById('activeManualLabel');
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+async function handleFiles(fileList){
+  for (const file of fileList){
+    if (file.type !== 'application/pdf') continue;
+    await processPdf(file);
+  }
+  fileInput.value = '';
+}
+
+function setProgress(pct, label){
+  progressWrap.style.display = 'block';
+  progressFill.style.width = pct + '%';
+  if (label) progressLabel.textContent = label;
+}
+function hideProgress(){ progressWrap.style.display = 'none'; }
+
+async function processPdf(file){
+  const id = 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  setProgress(2, 'กำลังเปิดไฟล์ ' + file.name + '...');
+  try{
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+    const numPages = pdf.numPages;
+    const pageTexts = [];
+    for (let i = 1; i <= numPages; i++){
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const text = content.items.map(it => it.str).join(' ');
+      pageTexts.push(text);
+      setProgress(5 + (i/numPages)*80, `กำลังแตกข้อความหน้า ${i}/${numPages}...`);
+    }
+    setProgress(90, 'กำลังแบ่งชิ้นข้อมูล...');
+    const chunks = chunkPages(pageTexts);
+    setProgress(100, 'เสร็จสิ้น');
+
+    manuals[id] = { id, name: file.name, pages: numPages, chunks, chatHistory: [] };
+    await persistManual(manuals[id]);
+    renderManualList();
+    selectManual(id);
+  } catch(err){
+    console.error(err);
+    alert('ไม่สามารถอ่านไฟล์ PDF นี้ได้: ' + err.message);
+  } finally {
+    setTimeout(hideProgress, 500);
+  }
+}
+
+function chunkPages(pageTexts){
+  // Build a flat string with page markers, then slide a window across it.
+  const chunks = [];
+  let buffer = '';
+  let bufferStartPage = 1;
+  const pageBoundaries = []; // {charIndex, page}
+  let running = '';
+  pageTexts.forEach((t, idx) => {
+    pageBoundaries.push({charIndex: running.length, page: idx+1});
+    running += t + '\n';
+  });
+
+  function pageForIndex(idx){
+    let page = 1;
+    for (const b of pageBoundaries){ if (b.charIndex <= idx) page = b.page; else break; }
+    return page;
+  }
+
+  let pos = 0;
+  while (pos < running.length){
+    const end = Math.min(pos + CHUNK_SIZE, running.length);
+    const text = running.slice(pos, end).trim();
+    if (text.length > 30){
+      chunks.push({
+        page: pageForIndex(pos),
+        pageEnd: pageForIndex(end),
+        text
+      });
+    }
+    pos += (CHUNK_SIZE - CHUNK_OVERLAP);
+  }
+  return chunks;
+}
+
+async function persistManual(m){
+  try{
+    const metaKey = `manual:${m.id}:meta`;
+    await window.storage.set(metaKey, JSON.stringify({name:m.name, pages:m.pages, chunkCount:m.chunks.length}));
+    // split chunks into ~1MB text parts to stay safely under 5MB/key
+    const parts = [];
+    let cur = [];
+    let curSize = 0;
+    for (const c of m.chunks){
+      const size = c.text.length;
+      if (curSize + size > 900000 && cur.length){
+        parts.push(cur); cur = []; curSize = 0;
+      }
+      cur.push(c); curSize += size;
+    }
+    if (cur.length) parts.push(cur);
+    await window.storage.set(`manual:${m.id}:partcount`, JSON.stringify(parts.length));
+    for (let i=0;i<parts.length;i++){
+      await window.storage.set(`manual:${m.id}:part:${i}`, JSON.stringify(parts[i]));
+    }
+  } catch(e){ console.warn('persist failed (continuing in-memory only)', e); }
+}
+
+async function loadPersistedManuals(){
+  try{
+    const list = await window.storage.list('manual:');
+    if (!list || !list.keys) return;
+    const metaKeys = list.keys.filter(k => k.endsWith(':meta'));
+    for (const mk of metaKeys){
+      const id = mk.split(':')[1];
+      try{
+        const metaRes = await window.storage.get(mk);
+        const meta = JSON.parse(metaRes.value);
+        const partCountRes = await window.storage.get(`manual:${id}:partcount`);
+        const partCount = JSON.parse(partCountRes.value);
+        let chunks = [];
+        for (let i=0;i<partCount;i++){
+          const partRes = await window.storage.get(`manual:${id}:part:${i}`);
+          chunks = chunks.concat(JSON.parse(partRes.value));
+        }
+        manuals[id] = {id, name: meta.name, pages: meta.pages, chunks, chatHistory: []};
+      } catch(e){ console.warn('failed to load manual', id, e); }
+    }
+    renderManualList();
+    const firstId = Object.keys(manuals)[0];
+    if (firstId) selectManual(firstId);
+  } catch(e){ /* storage not available - fine, in-memory only */ }
+}
+
+async function deleteManual(id, evt){
+  evt.stopPropagation();
+  if (!confirm('ลบคู่มือนี้ออกจากระบบ?')) return;
+  delete manuals[id];
+  try{
+    const partCountRes = await window.storage.get(`manual:${id}:partcount`).catch(()=>null);
+    const partCount = partCountRes ? JSON.parse(partCountRes.value) : 0;
+    await window.storage.delete(`manual:${id}:meta`).catch(()=>{});
+    await window.storage.delete(`manual:${id}:partcount`).catch(()=>{});
+    for (let i=0;i<partCount;i++){ await window.storage.delete(`manual:${id}:part:${i}`).catch(()=>{}); }
+  } catch(e){}
+  if (activeId === id){ activeId = null; questionInput.disabled = true; sendBtn.disabled = true; activeManualLabel.textContent = '— ยังไม่ได้เลือกคู่มือ —'; }
+  renderManualList();
+}
+
+function renderManualList(){
+  manualList.innerHTML = '';
+  Object.values(manuals).forEach(m => {
+    const card = document.createElement('div');
+    card.className = 'manual-card' + (m.id === activeId ? ' active' : '');
+    card.innerHTML = `
+      <button class="del-btn" title="ลบ">✕</button>
+      <div class="manual-name">${escapeHtml(m.name)}</div>
+      <div class="manual-meta">${m.pages} หน้า · ${m.chunks.length} ชิ้นข้อมูล</div>
+    `;
+    card.addEventListener('click', () => selectManual(m.id));
+    card.querySelector('.del-btn').addEventListener('click', (e) => deleteManual(m.id, e));
+    manualList.appendChild(card);
+  });
+}
+
+function selectManual(id){
+  activeId = id;
+  renderManualList();
+  const m = manuals[id];
+  activeManualLabel.textContent = m.name;
+  questionInput.disabled = false;
+  sendBtn.disabled = false;
+  renderMessages();
+}
+
+function renderMessages(){
+  messagesEl.innerHTML = '';
+  const m = manuals[activeId];
+  if (!m || m.chatHistory.length === 0){
+    messagesEl.appendChild(emptyState);
+    emptyState.querySelector('h3').textContent = m ? 'ถามได้เลย' : 'เริ่มจากอัปโหลดคู่มือ';
+    emptyState.querySelector('p').textContent = m
+      ? `พร้อมค้นหาใน "${m.name}" (${m.pages} หน้า, ${m.chunks.length} ชิ้นข้อมูล) แล้ว`
+      : 'อัปโหลดไฟล์ PDF คู่มือเครื่องจักรทางซ้าย ระบบจะแตกข้อความและเตรียมพร้อมให้ถามได้ทันที รองรับไฟล์ขนาดใหญ่หลายร้อยหน้า';
+    return;
+  }
+  m.chatHistory.forEach(msg => {
+    const div = document.createElement('div');
+    div.className = 'msg ' + msg.role;
+    let html = `<div class="bubble${msg.error?' error':''}">${escapeHtml(msg.content)}</div>`;
+    if (msg.pages && msg.pages.length){
+      html += `<div class="nameplate">อ้างอิงหน้า ${msg.pages.join(', ')}</div>`;
+    }
+    div.innerHTML = html;
+    messagesEl.appendChild(div);
+  });
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// --- retrieval: simple TF scoring with idf weighting across chunks ---
+function tokenize(text){
+  return (text.toLowerCase().match(/[a-zA-Z0-9\u0E00-\u0E7F]+/g) || []);
+}
+
+function retrieveTopChunks(question, chunks, k){
+  const qTokens = [...new Set(tokenize(question))].filter(t => t.length > 1);
+  if (qTokens.length === 0) return chunks.slice(0, k);
+
+  // document frequency for idf
+  const df = {};
+  qTokens.forEach(t => df[t] = 0);
+  chunks.forEach(c => {
+    const set = new Set(tokenize(c.text));
+    qTokens.forEach(t => { if (set.has(t)) df[t]++; });
+  });
+  const N = chunks.length;
+  const idf = {};
+  qTokens.forEach(t => { idf[t] = Math.log((N + 1) / (df[t] + 1)) + 1; });
+
+  const scored = chunks.map(c => {
+    const tokens = tokenize(c.text);
+    const tf = {};
+    tokens.forEach(t => { tf[t] = (tf[t]||0) + 1; });
+    let score = 0;
+    qTokens.forEach(t => { if (tf[t]) score += tf[t] * idf[t]; });
+    return {chunk: c, score};
+  });
+  scored.sort((a,b) => b.score - a.score);
+  const top = scored.filter(s => s.score > 0).slice(0, k);
+  return top.length ? top.map(s => s.chunk) : chunks.slice(0, k);
+}
+
+async function askQuestion(){
+  const m = manuals[activeId];
+  const question = questionInput.value.trim();
+  if (!m || !question) return;
+
+  questionInput.value = '';
+  sendBtn.disabled = true;
+  questionInput.disabled = true;
+
+  m.chatHistory.push({role:'user', content: question});
+  renderMessages();
+
+  const thinkingDiv = document.createElement('div');
+  thinkingDiv.className = 'msg assistant';
+  thinkingDiv.innerHTML = `<div class="bubble"><div class="thinking">กำลังค้นในคู่มือ<span class="dot-flash"></span><span class="dot-flash"></span><span class="dot-flash"></span></div></div>`;
+  messagesEl.appendChild(thinkingDiv);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+
+  try{
+    const topChunks = retrieveTopChunks(question, m.chunks, TOP_K);
+    const context = topChunks.map(c => `[หน้า ${c.page}${c.pageEnd && c.pageEnd!==c.page ? '-'+c.pageEnd : ''}]\n${c.text}`).join('\n\n---\n\n');
+    const pagesUsed = [...new Set(topChunks.map(c => c.page))].sort((a,b)=>a-b);
+
+    const systemPrompt = `คุณคือผู้ช่วยตอบคำถามจากคู่มือเครื่องจักรสำหรับช่างซ่อมบำรุง ตอบโดยอ้างอิงจากข้อมูลที่ให้มาเท่านั้น ห้ามเดาหรือใช้ความรู้ภายนอก ถ้าไม่พบคำตอบในข้อมูลที่ให้ ให้บอกตรงๆ ว่าไม่พบข้อมูลนี้ในคู่มือ ตอบให้กระชับ ตรงประเด็น เป็นภาษาไทย และถ้าเป็นตัวเลข/สเปค ให้ระบุค่าให้ชัดเจน`;
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [
+          { role: "user", content: `ข้อมูลจากคู่มือ:\n\n${context}\n\n---\n\nคำถาม: ${question}` }
+        ]
+      })
+    });
+    const data = await response.json();
+    thinkingDiv.remove();
+
+    if (data.error){
+      m.chatHistory.push({role:'assistant', content: 'เกิดข้อผิดพลาด: ' + data.error.message, error:true});
+    } else {
+      const text = (data.content || []).map(b => b.text || '').join('\n').trim();
+      m.chatHistory.push({role:'assistant', content: text || '(ไม่มีคำตอบ)', pages: pagesUsed});
+    }
+  } catch(err){
+    thinkingDiv.remove();
+    m.chatHistory.push({role:'assistant', content: 'เชื่อมต่อไม่สำเร็จ: ' + err.message, error:true});
+  }
+  renderMessages();
+  sendBtn.disabled = false;
+  questionInput.disabled = false;
+  questionInput.focus();
+}
+
+sendBtn.addEventListener('click', askQuestion);
+questionInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    askQuestion();
+  }
+});
+questionInput.addEventListener('input', () => {
+  questionInput.style.height = 'auto';
+  questionInput.style.height = Math.min(questionInput.scrollHeight, 120) + 'px';
+});
+
+loadPersistedManuals();
+</script>
+</body>
+</html>
